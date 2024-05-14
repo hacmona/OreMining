@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
@@ -127,12 +129,44 @@ public class OreMiningCommand extends BaseCommand implements Listener {
         return false;
     }
 
+    @EventHandler
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            ExecutingPlayer executingPlayer = findExecutingPlayer(player.getName());
+
+            if (executingPlayer != null && executingPlayer.isGameActive() && (
+                    event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK ||
+                    event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+                event.setCancelled(true);
+            }
+        }
+
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            ExecutingPlayer executingPlayer = findExecutingPlayer(player.getName());
+            if (executingPlayer == null || !executingPlayer.isGameActive()) {
+                return;
+            }
+            event.setCancelled(true);
+        }
+    }
+
+    private ExecutingPlayer findExecutingPlayer(String playerName) {
+        return executingPlayerList.stream()
+                .filter(p -> p.getPlayerName().equals(playerName))
+                .findFirst()
+                .orElse(null);
+    }
+
 
     @EventHandler
         public void onBlockBreak(BlockBreakEvent e) {
-            // ここにブロックが壊された時の処理を追加
-            Player player = e.getPlayer();
-        if (executingPlayerList.isEmpty()) {
+        Player player = e.getPlayer();
+        ExecutingPlayer executingPlayer = findExecutingPlayer(player.getName());
+        if (executingPlayer == null || !executingPlayer.isGameActive())  {
             return;
         }
 
@@ -143,21 +177,24 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                     if (!p.isGameActive()) {
                         return;
                     }
+
                     Material blockType = e.getBlock().getType();
                     String oreName;
                     int basePoint = switch (blockType) {
-                        case COPPER_ORE -> { oreName = "銅鉱石"; yield 5; }
-                        case COAL_ORE -> { oreName = "石炭鉱石"; yield 10; }
-                        case IRON_ORE -> { oreName = "鉄鉱石"; yield 15; }
-                        case GOLD_ORE -> { oreName = "金鉱石"; yield 20; }
-                        case LAPIS_ORE -> { oreName = "ラピスラズリ鉱石"; yield 25; }
-                        case REDSTONE_ORE -> { oreName = "レッドストーン鉱石"; yield 50; }
-                        case EMERALD_ORE -> { oreName = "エメラルド鉱石"; yield 150; }
-                        case DIAMOND_ORE -> { oreName = "ダイヤモンド鉱石"; yield 500; }
+                        case COPPER_ORE, DEEPSLATE_COPPER_ORE -> { oreName = "銅鉱石"; yield 5; }
+                        case COAL_ORE, DEEPSLATE_COAL_ORE -> { oreName = "石炭"; yield 10; }
+                        case IRON_ORE, DEEPSLATE_IRON_ORE -> { oreName = "鉄鉱石"; yield 15; }
+                        case GOLD_ORE, DEEPSLATE_GOLD_ORE -> { oreName = "金鉱石"; yield 20; }
+                        case LAPIS_ORE, DEEPSLATE_LAPIS_ORE -> { oreName = "ラピスラズリ鉱石"; yield 25; }
+                        case REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE -> { oreName = "レッドストーン鉱石"; yield 30; }
+                        case EMERALD_ORE, DEEPSLATE_EMERALD_ORE -> { oreName = "エメラルド鉱石"; yield 150; }
+                        case DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE -> { oreName = "ダイヤモンド鉱石"; yield 500; }
                         default -> { oreName = "その他"; yield -1; }
                     };
 
-                    if (basePoint == -1) return;
+                    if (basePoint == -1) {
+                        return;
+                    }
 
                     if (blockType == p.getLastOreType()) {
                         p.setConsecutiveOreCount(p.getConsecutiveOreCount() + 1);
@@ -169,12 +206,16 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                     int bonus = 0;
                     switch (p.getConsecutiveOreCount()) {
                         case 5 -> {
-                            bonus = 50;
-                            player.sendMessage("ボーナスポイント！" + oreName + "を5回連続で破壊しました。+50点！");
+                            bonus = 20;
+                            player.sendMessage("ボーナスポイント！" + oreName + "を5回連続で破壊しました。+20点！");
                         }
                         case 10 -> {
+                            bonus = 50;
+                            player.sendMessage("大ボーナスポイント！" + oreName + "を10回連続で破壊しました。+50点！");
+                        }
+                        case 15 -> {
                             bonus = 100;
-                            player.sendMessage("大ボーナスポイント！" + oreName + "を10回連続で破壊しました。+100点！");
+                            player.sendMessage("特大ボーナスポイント！" + oreName + "を15回連続で破壊しました。+100点！");
                         }
                     }
 
