@@ -28,9 +28,9 @@ import java.util.List;
 
 
 /**
- * 制限時間内に鉱石を採掘し、スコアを獲得するゲームを起動するコマンドです。
- * スコアは鉱石の種類によって変わり、採掘できた鉱石の合計によってスコアが変動します
- * 結果はプレイヤー名、点数、日時などで保存されます。
+ * 鉱石採掘ゲームを管理するクラスです。このゲームでは、プレイヤーは制限時間内に可能な限り多くの鉱石を採掘し、
+ * 鉱石の種類ごとに異なる点数を獲得します。ゲームの終了時には、採掘した鉱石の合計点数に基づいてスコアが計算され、
+ * プレイヤー名、得点、およびゲームの日時がデータベースに保存されます。
  */
 
 public class OreMiningCommand extends BaseCommand implements Listener {
@@ -53,9 +53,9 @@ public class OreMiningCommand extends BaseCommand implements Listener {
             return true;
         }
 
-        if (args.length == 0 || "oremining".equalsIgnoreCase(args[0])) {
+        if (args.length == 0 || "oreMining".equalsIgnoreCase(args[0])) {
             ExecutingPlayer nowExecutingPlayer = getPlayerScore(player);
-            InitStatus(player);
+            initStatus(player);
 
             int gameDuration = nowExecutingPlayer.getGameTime() / 60;
             player.sendTitle("鉱石採掘ゲームスタート！", "制限時間は" + gameDuration +
@@ -67,9 +67,11 @@ public class OreMiningCommand extends BaseCommand implements Listener {
     }
 
     /**
-     * 現在登録されているスコアの一覧をメッセージで送る。
+     * 登録されている全プレイヤーのスコアの一覧をプレイヤーに送信します。
+     * 送信される情報には、プレイヤーID、名前、スコア、記録日時が含まれます。
+     * 日時は 'yyyy-MM-dd HH:mm:ss' の形式でフォーマットされます。
      *
-     * @param player プレイヤー
+     * @param player スコアリストを受け取るプレイヤー
      */
 
     private void sendPlayerList(Player player) {
@@ -83,8 +85,10 @@ public class OreMiningCommand extends BaseCommand implements Listener {
     }
 
     /**
-     * ゲームを実行します。規定の時間内に鉱石を採掘すると、スコアが加算されます。合計スコアを時間経過後に表示します。
-     *
+     * ゲームのメインロジックを実行します。このメソッドは、ゲームのスタート時に呼び出され、
+     *  定期的なタイマーでゲームの残り時間を更新し、終了条件をチェックします。
+     *  ゲームの進行状況（残り時間）に応じてプレイヤーに通知を行い、
+     *  ゲーム終了時にはスコアを記録し、プレイヤーの状態をリセットします。
      * @param player コマンドを実行したプレイヤー
      * @param nowExecutingPlayer プレイヤースコア情報
      */
@@ -129,6 +133,16 @@ public class OreMiningCommand extends BaseCommand implements Listener {
         return false;
     }
 
+    /**
+     * エンティティがダメージを受けた際のイベントを処理します。
+     * このメソッドは、ゲーム中のプレイヤーが特定のダメージ源（エンティティの攻撃またはスイープ攻撃）から
+     * ダメージを受けた場合に、そのダメージをキャンセルします。
+     * ゲームがアクティブでない場合、またはプレイヤーが見つからない場合はダメージキャンセルは行いません。
+     *
+     * @param event ダメージイベント情報
+     */
+
+
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player) {
@@ -140,8 +154,16 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                 event.setCancelled(true);
             }
         }
-
     }
+
+    /**
+     * プレイヤーの食料レベルが変更された際のイベントを処理します。
+     * このメソッドは、ゲーム中のプレイヤーの食料レベルが変更された際に、その変更をキャンセルします。
+     * ゲームがアクティブなプレイヤーである場合のみ変更をキャンセルし、それ以外の場合は変更を許可します。
+     *
+     * @param event 食料レベル変更イベント情報
+     */
+
 
     @EventHandler
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
@@ -154,6 +176,16 @@ public class OreMiningCommand extends BaseCommand implements Listener {
         }
     }
 
+
+    /**
+     * 指定されたプレイヤー名を持つ実行中のプレイヤーを探します。
+     * 実行リストからプレイヤー名に一致する最初のプレイヤーを返し、
+     * 一致するプレイヤーがいない場合はnullを返します。
+     *
+     * @param playerName 検索するプレイヤーの名前
+     * @return 対応するExecutingPlayerオブジェクトまたはnull
+     */
+
     private ExecutingPlayer findExecutingPlayer(String playerName) {
         return executingPlayerList.stream()
                 .filter(p -> p.getPlayerName().equals(playerName))
@@ -161,6 +193,13 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                 .orElse(null);
     }
 
+    /**
+     * ブロック破壊イベントが発生したときに呼び出されるメソッドです。プレイヤーが鉱石を破壊すると、
+     * その鉱石の種類に基づいてスコアが計算され、プレイヤーの現在のスコアに加算されます。
+     * また、連続して同じ種類の鉱石を破壊した場合はボーナスポイントが与えられます。
+     *
+     * @param e ブロック破壊イベントの詳細情報を持つオブジェクト
+     */
 
     @EventHandler
         public void onBlockBreak(BlockBreakEvent e) {
@@ -187,7 +226,8 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                         case GOLD_ORE, DEEPSLATE_GOLD_ORE -> { oreName = "金鉱石"; yield 20; }
                         case LAPIS_ORE, DEEPSLATE_LAPIS_ORE -> { oreName = "ラピスラズリ鉱石"; yield 25; }
                         case REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE -> { oreName = "レッドストーン鉱石"; yield 30; }
-                        case EMERALD_ORE, DEEPSLATE_EMERALD_ORE -> { oreName = "エメラルド鉱石"; yield 150; }
+                        case AMETHYST_BLOCK, AMETHYST_SHARD -> { oreName = "アメジスト"; yield 30; }
+                        case EMERALD_ORE, DEEPSLATE_EMERALD_ORE -> { oreName = "エメラルド鉱石"; yield 50; }
                         case DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE -> { oreName = "ダイヤモンド鉱石"; yield 500; }
                         default -> { oreName = "その他"; yield -1; }
                     };
@@ -227,57 +267,39 @@ public class OreMiningCommand extends BaseCommand implements Listener {
     }
 
     /**
-     * 現在実行しているプレイヤーのスコア情報を取得する。
+     * 指定されたプレイヤー名に基づいて実行中のプレイヤーを取得します。
+     * プレイヤーリストに既存のプレイヤーが存在する場合はそのプレイヤーを返し、
+     * 存在しない場合は新しいプレイヤーを作成してリストに追加後、そのプレイヤーを返します。
+     * 新規プレイヤーは指定されたゲーム時間とスコア0で初期化されます。
      *
      * @param player コマンドを実行したプレイヤー
-     * @return 現在実行しているプレイヤーのスコア情報
+     * @return 対応するExecutingPlayerオブジェクト
      */
-
 
     private ExecutingPlayer getPlayerScore(Player player) {
-        ExecutingPlayer executingPlayer = new ExecutingPlayer(player.getName());
-
-        if (executingPlayerList.isEmpty()) {
-            executingPlayer = addNewPlayer(player);
-        } else {
-            executingPlayer = executingPlayerList.stream()
-                    .findFirst()
-                    .map(ps -> ps.getPlayerName().equals(player.getName())
-                    ? ps
-                    : addNewPlayer(player)).orElse(executingPlayer);
-        }
-
-        executingPlayer.setGameTime(GAME_TIME);
-        executingPlayer.setScore(0);
-        removePotionEffect(player);
-        return executingPlayer;
+        return executingPlayerList.stream()
+                .filter(p -> p.getPlayerName().equals(player.getName()))
+                .findFirst()
+                .orElseGet(() -> {
+                    ExecutingPlayer newPlayer = new ExecutingPlayer(player.getName());
+                    newPlayer.setGameTime(GAME_TIME);
+                    newPlayer.setScore(0);
+                    executingPlayerList.add(newPlayer);
+                    return newPlayer;
+                });
     }
 
 
-
     /**
-     * 新規のプレイヤー情報をリストに追加します。
+     * ゲーム開始前にプレイヤーの初期状態を設定します。
+     * このメソッドでは、プレイヤーの体力と空腹度を最大値に設定し、
+     * メインハンドにネザライト製のツルハシを、オフハンドに松明を64個装備させます。
      *
-     * @param player コマンドを実行したプレイヤー
-     * @return 新規プレイヤー
+     * @param player ゲームに参加するプレイヤー
      */
 
-    private ExecutingPlayer addNewPlayer(Player player) {
-        ExecutingPlayer newPlayer = new ExecutingPlayer(player.getName());
-        executingPlayerList.add(newPlayer);
-        return newPlayer;
-    }
-
-    /**
-     * ゲームを始める前にプレイヤーの状態を設定する。
-     * 体力と空腹度を最大にして、メインハンドにネザライトのツルハシ、オフハンドに松明を64個持たせる。
-     *
-     * @param player　コマンドを実行したプレイヤー
-     */
-
-    private static void InitStatus(Player player) {
-        //プレイヤーの状態を初期化する
-        player.setHealth(20);
+    private static void initStatus(Player player) {
+        player.setHealth(20.0);
         player.setFoodLevel(20);
 
         PlayerInventory inventory = player.getInventory();
@@ -286,11 +308,11 @@ public class OreMiningCommand extends BaseCommand implements Listener {
     }
 
     /**
-     * プレイヤーに設定されている特殊効果を除外します。
+     * 指定されたプレイヤーからすべてのポーション効果を削除します。
+     * これはゲームの開始時または終了時にプレイヤーの状態をリセットするために使用されます。
      *
-     * @param player コマンドを実行したプレイヤー
+     * @param player ポーション効果を削除するプレイヤー
      */
-
 
     private static void removePotionEffect(Player player) {
         player.getActivePotionEffects()

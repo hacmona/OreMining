@@ -13,17 +13,18 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * DB接続やそれに不随する登録や更新処理を行うクラスです。
+ * データベースとの接続を管理し、プレイヤーのスコア情報の登録および取得を行うクラスです。
+ * MyBatisを使用してSQLセッションを確立し、プレイヤースコアのCRUD操作をPlayerScoreMapperを通じて実行します。
  */
+
 public class PlayerScoreData {
 
-    private final SqlSessionFactory sqlSessionFactory;
     private final PlayerScoreMapper mapper;
 
     public PlayerScoreData(){
         try {
             InputStream inputStream= Resources.getResourceAsStream("mybatis-config.xml");
-            this.sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+            SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
             SqlSession session = sqlSessionFactory.openSession(true);
             this.mapper = session.getMapper(PlayerScoreMapper.class);
         } catch (IOException e) {

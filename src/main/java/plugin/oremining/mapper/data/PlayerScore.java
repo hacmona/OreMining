@@ -8,9 +8,12 @@ import org.bukkit.Material;
 import java.time.LocalDateTime;
 
 /**
- * プレイヤーのスコア情報を扱うオブジェクト。
- * DBに存在するテーブルと連動する。
+ * プレイヤーのスコアと採掘情報を管理するクラスです。
+ * このクラスのインスタンスは、データベースに存在する「player_score」テーブルと連動し、
+ * プレイヤーごとの採掘スコア、最後に採掘した鉱石の種類、連続採掘数などの情報を保持します。
+ * また、新しいプレイヤーのスコアを初期化する際にも使用されます。
  */
+
 @Getter
 @Setter
 @NoArgsConstructor
