@@ -3,6 +3,7 @@ package plugin.oremining.mapper.data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.bukkit.Material;
 
 import java.time.LocalDateTime;
 
@@ -19,10 +20,14 @@ public class PlayerScore {
     private String playerName;
     private int score;
     private LocalDateTime registeredAt;
+    private Material lastOreType;
+    private int consecutiveOreCount;
 
     public PlayerScore(String playerName, int score){
         this.playerName = playerName;
         this.score = score;
+        this.consecutiveOreCount = 0;
+        this.lastOreType = null;
     }
 
 }

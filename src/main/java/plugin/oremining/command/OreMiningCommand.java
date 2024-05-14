@@ -33,7 +33,7 @@ import java.util.List;
 
 public class OreMiningCommand extends BaseCommand implements Listener {
 
-    public static final int GAME_TIME = 30;
+    public static final int GAME_TIME = 300;
     private final List<ExecutingPlayer> executingPlayerList = new ArrayList<>();
     public static final String LIST = "list";
     private final Main main;
@@ -46,18 +46,22 @@ public class OreMiningCommand extends BaseCommand implements Listener {
 
     @Override
     public boolean onExecutePlayerCommand(Player player, Command command, String label, String[] args) {
-        if(args.length == 1 && (LIST.equals(args[0]))){
+        if (args.length == 1 && args[0].equals(LIST)) {
             sendPlayerList(player);
-            return false;
+            return true;
         }
 
-        ExecutingPlayer nowExecutingPlayer = getPlayerScore(player);
+        if (args.length == 0 || "oremining".equalsIgnoreCase(args[0])) {
+            ExecutingPlayer nowExecutingPlayer = getPlayerScore(player);
+            InitStatus(player);
 
-        InitStatus(player);
-
-        gamePlay(player, nowExecutingPlayer);
-
-        return true;
+            int gameDuration = nowExecutingPlayer.getGameTime() / 60;
+            player.sendTitle("鉱石採掘ゲームスタート！", "制限時間は" + gameDuration +
+                    "分です。たくさん採掘しよう！", 10, 70, 20);
+            gamePlay(player, nowExecutingPlayer);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -85,13 +89,17 @@ public class OreMiningCommand extends BaseCommand implements Listener {
 
     private void gamePlay(Player player, ExecutingPlayer nowExecutingPlayer) {
         nowExecutingPlayer.setGameActive(true);
+        nowExecutingPlayer.setGameTime(GAME_TIME);
+
         Bukkit.getScheduler().runTaskTimer(main, Runnable -> {
+            int remainingTime = nowExecutingPlayer.getGameTime();
             if (nowExecutingPlayer.getGameTime() <= 0) {
                 Runnable.cancel();
 
                 nowExecutingPlayer.setGameActive(false);
                 player.sendTitle("ゲーム終了！",
-                        nowExecutingPlayer.getPlayerName() + " 合計" + nowExecutingPlayer.getScore() + "点！お疲れ様でした！",
+                        nowExecutingPlayer.getPlayerName() + " 合計"
+                                + nowExecutingPlayer.getScore() + "点！お疲れ様でした！",
                         0, 60, 5);
 
                 removePotionEffect(player);
@@ -102,8 +110,16 @@ public class OreMiningCommand extends BaseCommand implements Listener {
 
                 return;
             }
+            if (remainingTime == GAME_TIME / 2) {
+                player.sendTitle("残り時間はあと半分！","",0,45,5);
+            }
+
+            if (remainingTime == 60) {
+                player.sendTitle("残り時間はあと1分！","",0,45,5);
+            }
+
             nowExecutingPlayer.setGameTime(nowExecutingPlayer.getGameTime() - 5);
-        }, 0, 5 * 30);
+        }, 0L, 100L);
     }
 
     @Override
@@ -128,21 +144,44 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                         return;
                     }
                     Material blockType = e.getBlock().getType();
-                    int point = switch (blockType) {
-                        case COPPER_ORE -> 5;
-                        case COAL_ORE -> 10;
-                        case IRON_ORE -> 15;
-                        case GOLD_ORE -> 20;
-                        case REDSTONE_ORE -> 50;
-                        case EMERALD_ORE -> 80;
-                        case DIAMOND_ORE -> 200;
-                        default -> -1;
+                    String oreName;
+                    int basePoint = switch (blockType) {
+                        case COPPER_ORE -> { oreName = "銅鉱石"; yield 5; }
+                        case COAL_ORE -> { oreName = "石炭鉱石"; yield 10; }
+                        case IRON_ORE -> { oreName = "鉄鉱石"; yield 15; }
+                        case GOLD_ORE -> { oreName = "金鉱石"; yield 20; }
+                        case LAPIS_ORE -> { oreName = "ラピスラズリ鉱石"; yield 25; }
+                        case REDSTONE_ORE -> { oreName = "レッドストーン鉱石"; yield 50; }
+                        case EMERALD_ORE -> { oreName = "エメラルド鉱石"; yield 150; }
+                        case DIAMOND_ORE -> { oreName = "ダイヤモンド鉱石"; yield 500; }
+                        default -> { oreName = "その他"; yield -1; }
                     };
 
-                    if (point != -1) {
-                        p.setScore(p.getScore() + point);
-                        player.sendMessage("ブロックを壊した！現在のスコアは" + p.getScore() + "点です！");
+                    if (basePoint == -1) return;
+
+                    if (blockType == p.getLastOreType()) {
+                        p.setConsecutiveOreCount(p.getConsecutiveOreCount() + 1);
+                    } else {
+                        p.setConsecutiveOreCount(1);
+                        p.setLastOreType(blockType);
                     }
+
+                    int bonus = 0;
+                    switch (p.getConsecutiveOreCount()) {
+                        case 5 -> {
+                            bonus = 50;
+                            player.sendMessage("ボーナスポイント！" + oreName + "を5回連続で破壊しました。+50点！");
+                        }
+                        case 10 -> {
+                            bonus = 100;
+                            player.sendMessage("大ボーナスポイント！" + oreName + "を10回連続で破壊しました。+100点！");
+                        }
+                    }
+
+                    int totalPoints = basePoint + bonus;
+                    p.setScore(p.getScore() + totalPoints);
+                    player.sendMessage(oreName + "を採掘した！" + oreName + "は" + basePoint + "点！" +
+                            "現在のスコアは" + p.getScore() + "点です！");
                 });
     }
 

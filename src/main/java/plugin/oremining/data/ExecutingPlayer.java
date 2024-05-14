@@ -2,6 +2,7 @@ package plugin.oremining.data;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Material;
 
 /**
  * OreMiningのゲームを実行する際のスコア情報を扱うオブジェクト。
@@ -18,9 +19,15 @@ public class ExecutingPlayer {
     private int score;
     private int gameTime;
     private boolean gameActive;
+    private Material lastOreType;
+    private int consecutiveOreCount;
 
     public ExecutingPlayer(String playerName){
+
         this.playerName = playerName;
+        this.lastOreType = null;
+        this.consecutiveOreCount = 0;
     }
+
 
 }
