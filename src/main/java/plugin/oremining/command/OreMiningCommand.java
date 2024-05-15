@@ -226,7 +226,7 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                         case GOLD_ORE, DEEPSLATE_GOLD_ORE -> { oreName = "金鉱石"; yield 20; }
                         case LAPIS_ORE, DEEPSLATE_LAPIS_ORE -> { oreName = "ラピスラズリ鉱石"; yield 25; }
                         case REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE -> { oreName = "レッドストーン鉱石"; yield 30; }
-                        case AMETHYST_BLOCK, AMETHYST_SHARD -> { oreName = "アメジスト"; yield 30; }
+                        case AMETHYST_BLOCK, AMETHYST_CLUSTER -> { oreName = "アメジスト"; yield 30; }
                         case EMERALD_ORE, DEEPSLATE_EMERALD_ORE -> { oreName = "エメラルド鉱石"; yield 50; }
                         case DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE -> { oreName = "ダイヤモンド鉱石"; yield 500; }
                         default -> { oreName = "その他"; yield -1; }
