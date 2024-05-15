@@ -57,7 +57,7 @@ public class OreMiningCommand extends BaseCommand implements Listener {
             ExecutingPlayer nowExecutingPlayer = getPlayerScore(player);
             initStatus(player);
 
-            int gameDuration = nowExecutingPlayer.getGameTime() / 60;
+            int gameDuration = GAME_TIME / 60;
             player.sendTitle("鉱石採掘ゲームスタート！", "制限時間は" + gameDuration +
                     "分です。たくさん採掘しよう！", 10, 70, 20);
             gamePlay(player, nowExecutingPlayer);
