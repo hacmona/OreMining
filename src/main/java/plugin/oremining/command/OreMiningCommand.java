@@ -114,6 +114,9 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                         new PlayerScore(nowExecutingPlayer.getPlayerName()
                                 , nowExecutingPlayer.getScore()));
 
+                nowExecutingPlayer.setScore(0);
+                nowExecutingPlayer.setConsecutiveOreCount(0);
+
                 return;
             }
             if (remainingTime == GAME_TIME / 2) {
