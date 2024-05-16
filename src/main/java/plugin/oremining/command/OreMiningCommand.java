@@ -255,6 +255,7 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                             oreName = "その他";
                             yield -1;
                         }
+
                     };
 
                     if (basePoint == -1) {
