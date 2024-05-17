@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
  * プレイヤーごとの採掘スコア、最後に採掘した鉱石の種類、連続採掘数などの情報を保持します。
  * また、新しいプレイヤーのスコアを初期化する際にも使用されます。
  */
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,7 +25,7 @@ public class PlayerScore {
     private Material lastOreType;
     private int consecutiveOreCount;
 
-    public PlayerScore(String playerName, int score){
+    public PlayerScore(String playerName, int score) {
         this.playerName = playerName;
         this.score = score;
         this.consecutiveOreCount = 0;

@@ -16,14 +16,13 @@ import java.util.List;
  * データベースとの接続を管理し、プレイヤーのスコア情報の登録および取得を行うクラスです。
  * MyBatisを使用してSQLセッションを確立し、プレイヤースコアのCRUD操作をPlayerScoreMapperを通じて実行します。
  */
-
 public class PlayerScoreData {
 
     private final PlayerScoreMapper mapper;
 
-    public PlayerScoreData(){
+    public PlayerScoreData() {
         try {
-            InputStream inputStream= Resources.getResourceAsStream("mybatis-config.xml");
+            InputStream inputStream = Resources.getResourceAsStream("mybatis-config.xml");
             SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
             SqlSession session = sqlSessionFactory.openSession(true);
             this.mapper = session.getMapper(PlayerScoreMapper.class);
@@ -43,9 +42,10 @@ public class PlayerScoreData {
 
     /**
      * プレイヤースコアテーブルにスコア情報を登録する。
+     *
      * @param playerScore プレイヤースコア
      */
-    public void insert(PlayerScore playerScore){
+    public void insert(PlayerScore playerScore) {
         mapper.insert(playerScore);
     }
 }
