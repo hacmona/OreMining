@@ -1,6 +1,5 @@
 package plugin.oremining.data;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
@@ -12,10 +11,8 @@ import org.bukkit.Material;
  */
 @Getter
 @Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 
 public class ExecutingPlayer {
-    @EqualsAndHashCode.Include
     private String playerName;
     private int score;
     private int gameTime;

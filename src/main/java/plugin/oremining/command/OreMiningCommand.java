@@ -173,7 +173,6 @@ public class OreMiningCommand extends BaseCommand implements Listener {
         }
     }
 
-
     /**
      * 指定されたプレイヤー名を持つ実行中のプレイヤーを探します。
      * 実行リストからプレイヤー名に一致する最初のプレイヤーを返し、
