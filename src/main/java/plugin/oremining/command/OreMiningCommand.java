@@ -214,6 +214,7 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                     Material blockType = e.getBlock().getType();
                     String oreName;
                     int basePoint = switch (blockType) {
+
                         case COPPER_ORE, DEEPSLATE_COPPER_ORE -> {
                             oreName = "銅鉱石";
                             yield 5;
@@ -254,6 +255,7 @@ public class OreMiningCommand extends BaseCommand implements Listener {
                             oreName = "その他";
                             yield -1;
                         }
+
                     };
 
                     if (basePoint == -1) {
