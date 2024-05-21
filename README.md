@@ -22,8 +22,8 @@ https://github.com/hacmona/OreMining/assets/131163382/a9ba974c-9241-45f2-b8e2-33
 - **Minecraft**: 1.20.4
 
 ## MySQLの設定
-- **ユーザー名**: root
-- **パスワード**: Pre07neo4!
+- **ユーザー名**:（コードを確認してください）
+- **パスワード**: （コードを確認してください）
 - **データベース名**: spigot_server
 - **テーブル名**: ore_player_score
 - **URL**: jdbc:mysql://localhost:3306/spigot_server?serverTimezone=UTC
